@@ -69,7 +69,7 @@ public class OperatingSystem {
 
     public static Object parseString(String input) {
         try {
-            return Integer.parseInt(input);
+            return Integer.parseInt(input.replaceAll(" ", ""));
         } catch (NumberFormatException e1) {
             try {
                 return Double.parseDouble(input);
@@ -115,9 +115,11 @@ public class OperatingSystem {
             System.out.println("Clock Cycle: " + clockCycle);
             if (arrivalTimes[0] == clockCycle) {
                 createProcess(programPaths[0]);
-            } else if (arrivalTimes[1] == clockCycle) {
+            }
+            if (arrivalTimes[1] == clockCycle) {
                 createProcess(programPaths[1]);
-            } else if (arrivalTimes[2] == clockCycle) {
+            }
+            if (arrivalTimes[2] == clockCycle) {
                 createProcess(programPaths[2]);
             }
 
@@ -282,10 +284,11 @@ public class OperatingSystem {
 
     public void swapProcessToDisk(Integer pid) { // memory to disk
 
-        System.out.println("Swapping process " + pid + " to disk");
-        if (getProcessState(pid).equals(State.FINISHED))
+        if (getProcessState(pid).equals(State.FINISHED)) {
+            System.out.println("Process " + pid + " will not be swapped to disk because it is finished");
             return;
-
+        }
+        System.out.println("Swapping process " + pid + " to disk");
         Integer begin = getMemoryBegin(pid); // returns memory bound 1
         Integer end = getMemoryEnd(pid); // returns memory bound 2
 
@@ -324,7 +327,15 @@ public class OperatingSystem {
                         String[] tokens = line.split(" ");
                         if (tokens[0].equals("variable")) {
                             variableNames[varCount] = tokens[1];
-                            variableValues[varCount] = parseString(tokens[3]);
+                            String variableValue = "";
+//                            if (tokens.length > 4) {
+                            int i = 3;
+                            while (i < tokens.length) {
+                                variableValue += tokens[i] + " ";
+                                i++;
+                            }
+//                            }
+                            variableValues[varCount] = parseString(variableValue);
                             varCount++;
                         } else {
                             instructions += line + "\n";
