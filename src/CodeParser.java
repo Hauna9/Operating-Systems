@@ -135,7 +135,7 @@ public class CodeParser {
                         }
                         default: {
                             for (int i = 0; i < variables.length; i++) {
-                                if (variables[i] == null) 
+                                if (variables[i] == null)
                                     break;
                                 if (variables[i].equals(value)) {
                                     value = getVariableValue(pid, (String) value);

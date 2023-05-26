@@ -4,9 +4,9 @@ public class Main {
 
         public static void main(String[] args) {
             String[] programs = new String[3];
-            programs[0] = "Program_1.txt";
+            programs[0] = "Program_3.txt";
             programs[1] = "Program_2.txt";
-            programs[2] = "Program_3.txt";
+            programs[2] = "Program_1.txt";
 
             int arrivalTime[] = new int[3];
             arrivalTime[0] = 0;

@@ -54,6 +54,7 @@ public class Scheduler {
         int pid = readyQueue.remove();
         runningProcessID = pid;
         OperatingSystem.getInstance().setProcessState(pid, State.RUNNING);
+        System.out.println("PROCESS " + pid + " CHOSEN TO RUN");
         printQueues();
     }
 
@@ -72,6 +73,7 @@ public class Scheduler {
         OperatingSystem.getInstance().getIsFinished()[pid] = true;
         runningProcessID = -1;
         currentSlice = 0;
+        System.out.println("PROCESS " + pid + " FINISHED");
         printQueues();
     }
 
@@ -82,6 +84,7 @@ public class Scheduler {
         addToBlockedQueue(pid);
         runningProcessID = -1;
         currentSlice = 0;
+        System.out.println("PROCESS " + pid + " BLOCKED");
         printQueues();
     }
 

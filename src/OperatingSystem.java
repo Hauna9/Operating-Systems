@@ -8,24 +8,17 @@ public class OperatingSystem {
     private static Mutex outputMutex;
     private static Mutex fileMutex; // accessing a file on disk (read/write)
     private static MemoryWord[] memory;
-
+    private static OperatingSystem instance;
     // locations of first and second loaded programs in memory
     private final Integer firstProgram = 15;
     private final Integer secondProgram = 27;
-
     private Scheduler scheduler;
     private CodeParser parser;
     private int clockCycle;
-
     private boolean[] isFinished;
     private String[] programPaths;
     private int[] arrivalTimes;
-
     private Object[] tempValues; // used to store the value of a variable when it is being used in a multi clockCycle instruction
-
-
-    private static OperatingSystem instance;
-
 
 
     // PCB order in memory  is: PID, State, ProgramCounter, MemoryBegin, MemoryEnd
@@ -74,6 +67,40 @@ public class OperatingSystem {
         return instance;
     }
 
+    public static Object parseString(String input) {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException e1) {
+            try {
+                return Double.parseDouble(input);
+            } catch (NumberFormatException e2) {
+                if (input.equalsIgnoreCase("true") || input.equalsIgnoreCase("false")) {
+                    return Boolean.parseBoolean(input);
+                } else {
+                    return input;
+                }
+            }
+        }
+    }
+
+    public static MemoryWord[] getMemory() {
+        return memory;
+    }
+
+    public static Mutex getInputMutex() {
+        return inputMutex;
+    }
+
+    public static Mutex getOutputMutex() {
+        return outputMutex;
+    }
+
+    public static Mutex getFileMutex() {
+        return fileMutex;
+    }
+
+    // Memory methods
+
     public void init(String[] programPaths, int[] arrivalTimes, int timeSlice) {
         this.programPaths = programPaths;
         this.arrivalTimes = arrivalTimes;
@@ -84,25 +111,24 @@ public class OperatingSystem {
     }
 
     public void runOS() {
-        while(!allProcessesFinished()){
+        while (!allProcessesFinished()) {
             System.out.println("Clock Cycle: " + clockCycle);
-            if(arrivalTimes[0]==clockCycle){
+            if (arrivalTimes[0] == clockCycle) {
                 createProcess(programPaths[0]);
-            }
-            else if(arrivalTimes[1]==clockCycle){
+            } else if (arrivalTimes[1] == clockCycle) {
                 createProcess(programPaths[1]);
-            }
-            else if(arrivalTimes[2]==clockCycle){
+            } else if (arrivalTimes[2] == clockCycle) {
                 createProcess(programPaths[2]);
             }
 
             scheduler.schedule();
 
             clockCycle++;
+            System.out.println("------------------------------------------------------------------------------------");
         }
     }
 
-    public void execute(int pid){
+    public void execute(int pid) {
 
         System.out.println("Executing process " + pid);
 
@@ -113,33 +139,29 @@ public class OperatingSystem {
 
         parser.parseLine(instruction, pid, tempValues);
         //only incrementing counter if we didn't do readfile or input into tempValue (assign a readfile b || assign a input)
-        if(tempValues[pid]==null) {
+        if (tempValues[pid] == null) {
             incrementProgramCounter(pid);
         }
-        System.out.println("runningProcessID: " + scheduler.getRunningProcessID());
-        System.out.println("currentSlice: " + scheduler.getCurrentSlice());
         printMemory();
     }
 
-    public boolean processFinished(int pid){
+    public boolean processFinished(int pid) {
         Integer memoryBegin = getMemoryBegin(pid);
         Integer memoryEnd = getMemoryEnd(pid);
         Integer programCounter = getProgramCounter(pid);
         Integer currentInstruction = memoryBegin + programCounter;
-        if(memory[currentInstruction].getInstruction() == null || currentInstruction == memoryEnd)
+        if (memory[currentInstruction].getInstruction() == null || currentInstruction == memoryEnd)
             return true;
         return false;
     }
 
-    public boolean allProcessesFinished(){
-      for(int i = 0; i < 3; i++){
-            if(!isFinished[i])
+    public boolean allProcessesFinished() {
+        for (int i = 0; i < 3; i++) {
+            if (!isFinished[i])
                 return false;
         }
         return true;
     }
-
-    // Memory methods
 
     public void createProcess(String filePath) {
         // retrieve the program from the file
@@ -204,10 +226,10 @@ public class OperatingSystem {
         }
     }
 
-    public boolean processInMemory(Integer pid){
+    public boolean processInMemory(Integer pid) {
         Integer memoryBegin = getMemoryBegin(pid);
         Integer memoryEnd = getMemoryEnd(pid);
-        if(memoryBegin == null || memoryEnd == null)
+        if (memoryBegin == null || memoryEnd == null)
             return false;
         return true;
     }
@@ -220,7 +242,6 @@ public class OperatingSystem {
         else
             return -1; // both slots are occupied
     }
-
 
     public void insertInstructionsIntoMemory(Integer pid, Integer memoryPosition, String program) { // position read from pcv attribute?
         String[] programSplit = program.split("\n");
@@ -302,13 +323,13 @@ public class OperatingSystem {
                     while (!line.replaceAll("\n", "").equals("__ENDPROCESS__")) {
                         String[] tokens = line.split(" ");
                         if (tokens[0].equals("variable")) {
-                             variableNames[varCount] = tokens[1];
-                             variableValues[varCount] = parseString(tokens[3]);
+                            variableNames[varCount] = tokens[1];
+                            variableValues[varCount] = parseString(tokens[3]);
                             varCount++;
                         } else {
                             instructions += line + "\n";
-                            line = br.readLine();
                         }
+                        line = br.readLine();
                     }
                     if (line.replaceAll("\n", "").equals("__ENDPROCESS__"))
                         break;
@@ -406,49 +427,22 @@ public class OperatingSystem {
         return (Integer) memory[pcbStart + 4].getValue();
     }
 
-    public Object getVariableValue(int pid, String variableName){
+    public Object getVariableValue(int pid, String variableName) {
         Integer end = getMemoryEnd(pid); // returns memory bound 2
-        for (int i = end; i >= end-2; i--) {
-            if(memory[i].getVariableName().equals(variableName))
+        for (int i = end; i >= end - 2; i--) {
+            if (memory[i].getVariableName().equals(variableName))
                 return memory[i].getValue();
         }
         return null;
-    }
-
-    public static Object parseString(String input) {
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException e1) {
-            try {
-                return Double.parseDouble(input);
-            } catch (NumberFormatException e2) {
-                if (input.equalsIgnoreCase("true") || input.equalsIgnoreCase("false")) {
-                    return Boolean.parseBoolean(input);
-                } else {
-                    return input;
-                }
-            }
-        }
     }
 
     // getters and setters
     public Object[] getTempValues() {
         return tempValues;
     }
-    public static MemoryWord[] getMemory() {
-        return memory;
-    }
+
     public void incrementClockCycle() {
         clockCycle++;
-    }
-    public static Mutex getInputMutex() {
-        return inputMutex;
-    }
-    public static Mutex getOutputMutex() {
-        return outputMutex;
-    }
-    public static Mutex getFileMutex() {
-        return fileMutex;
     }
 
     public int[] getArrivalTimes() {
@@ -467,11 +461,12 @@ public class OperatingSystem {
         this.programPaths = programPaths;
     }
 
-    public void setTimeSlice(int timeSlice){
-        scheduler.setTimeSlice(timeSlice);
-    }
     public int getTimeSlice() {
         return scheduler.getTimeSlice();
+    }
+
+    public void setTimeSlice(int timeSlice) {
+        scheduler.setTimeSlice(timeSlice);
     }
 
     public boolean[] getIsFinished() {
